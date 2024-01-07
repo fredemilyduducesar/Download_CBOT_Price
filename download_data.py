@@ -7,14 +7,12 @@ def add_columns(df, name, ticker_symbol):
     To add below columns in dataframe provided:
         1. Download time
         2. RunId (Eg: 2024-01-07 is 240107)
-        3. Intraday_Id
-        4. ticker
-        5. Name
+        3. ticker
+        4. Name
     """
     # Add columns
     df['Download_time'] = datetime.now()
     df['RunId'] = datetime.today().strftime("%y%m%d")
-    df['Intraday_Id'] = range(1, df.shape[0] + 1)
     df['Ticker'] = ticker_symbol
     df['Name'] = name
     
@@ -30,6 +28,7 @@ def download_price_data(name, ticker_symbol, start_date, end_date, interval):
     # 3. Download
     df = yf.download(ticker_symbol, start=start_date,
                        end=end_date, interval=interval)
+    df = df.reset_index()
     # 4. Add columns
     add_columns(df, name, ticker_symbol)
     return df
@@ -42,5 +41,21 @@ def download_data(names, start_date, end_date, interval):
     for name in names:
         df = download_price_data(name, names[name], start_date, end_date, interval)
         df_result = df_result._append(df, ignore_index = True)
+    df_result['Intraday_Id'] = range(1, df_result.shape[0] + 1)
     return df_result
 
+
+name_mapping = {
+    "Soybean Meal": "ZS=F",
+    "Corn": "ZC=F",
+    "Soybean Oil": "ZL=F",
+    "Lean Hogs": "HE=F",
+    "Live Cattle": "LE=F",
+    "Cocoa": "CC=F",
+    "Coffee": "KC=F",
+    "Cotton": "CT=F",
+    "Orange Juice": "OJ=F",
+    "Sugar": "SB=F"
+}
+
+print(download_data(name_mapping, "2023-10-15", "2023-10-31", 'w'))
