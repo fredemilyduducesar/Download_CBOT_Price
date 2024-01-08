@@ -43,19 +43,3 @@ def download_data(names, start_date, end_date, interval):
         df_result = df_result._append(df, ignore_index = True)
     df_result['Intraday_Id'] = range(1, df_result.shape[0] + 1)
     return df_result
-
-
-name_mapping = {
-    "Soybean Meal": "ZS=F",
-    "Corn": "ZC=F",
-    "Soybean Oil": "ZL=F",
-    "Lean Hogs": "HE=F",
-    "Live Cattle": "LE=F",
-    "Cocoa": "CC=F",
-    "Coffee": "KC=F",
-    "Cotton": "CT=F",
-    "Orange Juice": "OJ=F",
-    "Sugar": "SB=F"
-}
-
-print(download_data(name_mapping, "2023-10-15", "2023-10-31", 'w'))
