@@ -2,9 +2,6 @@
 This package contains functions that used to validate parameters 
 """
 import datetime
-import urllib
-from sqlalchemy import create_engine, text
-import pandas as pd
 import logging
 
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')

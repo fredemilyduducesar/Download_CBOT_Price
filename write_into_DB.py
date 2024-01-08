@@ -8,7 +8,6 @@ import urllib
 from sqlalchemy import create_engine, text
 import pandas as pd
 import logging
-import datetime
 
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
 
@@ -105,14 +104,13 @@ def write_data_into_db(dataframe, server, schema, database, database_tablename):
     engine = create_engine(connection_string)
 
     # 3. Check schema existence
+    logging.info(f"Checking schema {schema} existence.")
     check_schema_existence(engine, database, schema)
     
-    # 4. Duplicate date removal
-    existing_dates = get_existing_dates(server, database, schema, database_tablename)
-    dataframe = data_duplication_removal(existing_dates, dataframe)
-
     # 4. Write into DB
+    logging.info(f"Writting into database.")
     dataframe.to_sql(database_tablename, con=engine, schema=schema, index=False, if_exists='append')
 
     # 5. Close the connection
+    logging.info(f"Finish! Close connection.")
     engine.dispose()

@@ -4,7 +4,7 @@ Main program
 import sys
 from get_dates_freq_and_check import validate_parameters
 from download_data import download_data
-from write_into_DB import write_data_into_db
+from write_into_DB import write_data_into_db, get_existing_dates, data_duplication_removal
 import time
 import logging
 
@@ -54,16 +54,24 @@ def main():
     data = download_data(name_mapping, start_date, end_date, freq)
     
     if data.empty:
-        logging.info("****** 3. No data downloaded. Process finished.")
+        logging.info("****** 3. No data downloaded. Process finished. ******")
         return
 
-    # 3. Wrie into DB
+    # 3. Duplication dates removal
+    existing_dates = get_existing_dates(server, database, schema, database_tablename)
+    data = data_duplication_removal(existing_dates, data)
+    
+    if data.empty:
+        logging.info("****** 3. No data left after date duplication removal. No data need to write in DB. Process Finish. ******")
+        return
+    
+    # 4. Wrie into DB
     logging.info("****** 3. Starts to write data into DB ******")
     
     write_data_into_db(data, server, schema, database, database_tablename)
 
     # 4. Complete
-    logging.info(f"****** 4. Process completes. ******")
+    logging.info(f"****** 4. Process completes ******")
     logging.info(f"Total {data.shape[0]} records inserted into: {server}.{database}.{schema}.{database_tablename}")
 
 # 3. Start
