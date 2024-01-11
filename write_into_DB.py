@@ -109,7 +109,7 @@ def write_data_into_db(dataframe, server, schema, database, database_tablename):
     
     # 4. Write into DB
     logging.info(f"Writting into database.")
-    dataframe.to_sql(database_tablename, con=engine, schema=schema, index=False, if_exists='append')
+    dataframe.to_sql(database_tablename, con=engine, schema=schema, index=False, if_exists='replace')
 
     # 5. Close the connection
     logging.info(f"Finish! Close connection.")

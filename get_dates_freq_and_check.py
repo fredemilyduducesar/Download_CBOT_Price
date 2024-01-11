@@ -55,7 +55,8 @@ def validate_parameters(args):
     elif len(dates) == 1:
         start_date = end_date = datetime.datetime.strptime(dates[0], '%Y-%m-%d')
     else:
-        start_date = end_date = datetime.datetime.today()
+        start_date = datetime.datetime.strptime("2000-01-01", '%Y-%m-%d')
+        end_date = datetime.datetime.today() + datetime.timedelta(days=1)
 
     logging.info(f"Parameters validated: ");
     logging.info(f"Start date: {start_date.strftime('%Y-%m-%d')}, End date: {end_date.strftime('%Y-%m-%d')}, Frequency: {freq}")

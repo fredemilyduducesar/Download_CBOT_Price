@@ -7,6 +7,7 @@ from download_data import download_data
 from write_into_DB import write_data_into_db, get_existing_dates, data_duplication_removal
 import time
 import logging
+import datetime
 
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
 
@@ -57,12 +58,13 @@ def main():
         logging.info("****** 3. No data downloaded. Process finished. ******")
         return
 
-    # 3. Duplication dates removal
-    existing_dates = get_existing_dates(server, database, schema, database_tablename)
-    data = data_duplication_removal(existing_dates, data)
+    # 3. Duplication dates removal when random insert
+    if start_date != datetime.datetime.strptime("2000-01-01", '%Y-%m-%d'):
+        existing_dates = get_existing_dates(server, database, schema, database_tablename)
+        data = data_duplication_removal(existing_dates, data)
     
-    if data.empty:
-        logging.info("****** 3. No data left after date duplication removal. No data need to write in DB. Process Finish. ******")
+        if data.empty:
+            logging.info("****** 3. No data left after date duplication removal. No data need to write in DB. Process Finish. ******")
         return
     
     # 4. Wrie into DB
@@ -70,7 +72,7 @@ def main():
     
     write_data_into_db(data, server, schema, database, database_tablename)
 
-    # 4. Complete
+    # 5. Complete
     logging.info(f"****** 4. Process completes ******")
     logging.info(f"Total {data.shape[0]} records inserted into: {server}.{database}.{schema}.{database_tablename}")
 
