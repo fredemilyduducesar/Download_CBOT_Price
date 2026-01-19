@@ -1,0 +1,7 @@
+pandas
+yfinance
+sqlalchemy
+pyodbc
+python-dotenv
+pytz
+requests

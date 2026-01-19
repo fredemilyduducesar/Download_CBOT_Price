@@ -8,13 +8,18 @@ from write_into_DB import write_data_into_db, get_existing_dates, data_duplicati
 import time
 import logging
 import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
 
 # 1. Configurations
-server = 'FRED' 
-database = 'Raw'
-schema = 'CBOT'
+server = os.getenv("DB_SERVER", "FRED")
+database = os.getenv("DB_DATABASE", "Raw")
+schema = os.getenv("DB_SCHEMA", "CBOT")
+
 name_mapping = { # List of products for download with corresponding ticker 
     "Soybean": "ZS=F",
     "Corn": "ZC=F",
@@ -65,12 +70,13 @@ def main():
     
         if data.empty:
             logging.info("****** 3. No data left after date duplication removal. No data need to write in DB. Process Finish. ******")
-        return
+            return
     
     # 4. Wrie into DB
     logging.info("****** 3. Starts to write data into DB ******")
     
-    write_data_into_db(data, server, schema, database, database_tablename)
+    if_exists = "replace" if start_date == datetime.datetime.strptime("2000-01-01", "%Y-%m-%d") else "append"
+    write_data_into_db(data, server, schema, database, database_tablename, if_exists=if_exists)
 
     # 5. Complete
     logging.info(f"****** 4. Process completes ******")

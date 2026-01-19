@@ -8,24 +8,55 @@ import urllib
 from sqlalchemy import create_engine, text
 import pandas as pd
 import logging
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level = logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
+
+# 0. Get engine
+def build_engine(server=None, database=None):
+    server = server or os.getenv("DB_SERVER")
+    database = database or os.getenv("DB_DATABASE")
+    driver = os.getenv("DB_DRIVER", "ODBC Driver 17 for SQL Server")
+
+    if not server or not database:
+        raise RuntimeError("Missing DB_SERVER/DB_DATABASE. Copy .env.example to .env and fill values.")
+
+    trusted = os.getenv("DB_TRUSTED_CONNECTION", "yes").strip().lower() in {"1","true","yes","y"}
+
+    if trusted:
+        odbc = (
+            f"Driver={{{driver}}};"
+            f"Server={server};"
+            f"Database={database};"
+            "Trusted_Connection=yes;"
+        )
+    else:
+        user = os.getenv("DB_USERNAME")
+        pwd = os.getenv("DB_PASSWORD")
+        if not user or not pwd:
+            raise RuntimeError("Missing DB_USERNAME/DB_PASSWORD (or set DB_TRUSTED_CONNECTION=yes).")
+        odbc = (
+            f"Driver={{{driver}}};"
+            f"Server={server};"
+            f"Database={database};"
+            f"UID={user};"
+            f"PWD={pwd};"
+        )
+
+    params = urllib.parse.quote_plus(odbc)
+    connection_string = f"mssql+pyodbc:///?odbc_connect={params}"
+    return create_engine(connection_string)
 
 # 1. Date elimination
 def get_existing_dates(server, database, schema, database_tablename):
     """
     To get a list of existing dates from table in sql server database
     """
-    # Concat string
-    params = urllib.parse.quote_plus(
-        "Driver={ODBC Driver 17 for SQL Server};"
-        f"Server={server};"
-        f"Database={database};"
-        "Trusted_Connection=yes;"
-    )
-    connection_string = f"mssql+pyodbc:///?odbc_connect={params}"
-    # Connect to database
-    engine = create_engine(connection_string)
+    # Build engine
+    engine = build_engine(server=server, database=database)
     # Get distinct dates
     query = f"""
         IF EXISTS (
@@ -87,30 +118,21 @@ def check_schema_existence(engine, database, schema):
         conn.execute(schema_creation_query)
         
 # 3. Write into DB
-def write_data_into_db(dataframe, server, schema, database, database_tablename):
+def write_data_into_db(dataframe, server, schema, database, database_tablename, if_exists="append"):
     """
     Write dataframe into database
     """
-    # 1. Concat string
-    params = urllib.parse.quote_plus(
-        "Driver={ODBC Driver 17 for SQL Server};"
-        f"Server={server};"
-        f"Database={database};"
-        "Trusted_Connection=yes;"
-    )
-    connection_string = f"mssql+pyodbc:///?odbc_connect={params}"
+    # Build engine
+    engine = build_engine(server=server, database=database)
 
-    # 2. Connect to database
-    engine = create_engine(connection_string)
-
-    # 3. Check schema existence
+    # Check schema existence
     logging.info(f"Checking schema {schema} existence.")
     check_schema_existence(engine, database, schema)
     
-    # 4. Write into DB
+    # Write into DB
     logging.info(f"Writting into database.")
-    dataframe.to_sql(database_tablename, con=engine, schema=schema, index=False, if_exists='replace')
+    dataframe.to_sql(database_tablename, con=engine, schema=schema, index=False, if_exists=if_exists)
 
-    # 5. Close the connection
+    # Close the connection
     logging.info(f"Finish! Close connection.")
     engine.dispose()
