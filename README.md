@@ -16,7 +16,10 @@ cp .env.example .env
 ## Run:
 
 python main.py d
+
 python main.py w
+
 python main.py 2024-01-10 d
+
 python main.py 2024-01-01 2024-01-10 d
 
